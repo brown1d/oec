@@ -38,6 +38,7 @@ class Controller:
 
         self.devices = { }
         self.detatched_device_poll_queue = []
+        self.device_poll_responses = { }
 
         self.sessions = { }
         self.session_selector = None
@@ -225,25 +226,31 @@ class Controller:
 
             poll_commands = [address_commands(device.device_address, Poll(device.get_poll_action())) for device in devices]
 
-            poll_responses = list(zip(devices, self.interface.execute(poll_commands, receive_timeout_is_error=False)))
+            poll_responses = self.interface.execute(poll_commands, receive_timeout_is_error=False)
 
-            # Handle POLL responses.
-            handleable_poll_responses = [pair for pair in poll_responses if pair[1] is not None and not isinstance(pair[1], ReceiveTimeout)]
+            for (device, poll_response) in list(zip(devices, poll_responses)):
+                # Update the device responses.
+                xxx = self.device_poll_responses.get(device.device_address, None)
 
-            if handleable_poll_responses:
-                poll_ack_commands = [address_commands(device.device_address, PollAck()) for (device, _) in handleable_poll_responses]
+                if xxx is not None:
+                    self.device_poll_responses[device.device_address] = [poll_response] + xxx[0:2]
+                else:
+                    self.device_poll_responses[device.device_address] = [poll_response]
 
-                self.interface.execute(poll_ack_commands)
+                if poll_response is None:
+                    continue
 
-                for (device, poll_response) in handleable_poll_responses:
+                if isinstance(poll_response, ReceiveTimeout):
+                    self.logger.info(f'POLL receive timeout for device @ {format_address(self.interface, device.device_address)}')
+
+                    xxx = self.device_poll_responses.get(device.device_address, [])
+
+                    if len(xxx) == 3 and all(isinstance(poll_response, ReceiveTimeout) for poll_response in xxx):
+                        self._handle_device_lost(device)
+                else:
                     self._handle_poll_response(device, poll_response)
 
-            # Handle lost devices.
-            for (device, poll_response) in poll_responses:
-                if isinstance(poll_response, ReceiveTimeout):
-                    self._handle_device_lost(device)
-
-            if not handleable_poll_responses:
+            if all(poll_response is None or isinstance(poll_response, ReceiveTimeout) for poll_response in poll_responses):
                 break
 
     def _poll_next_detatched_device(self):
@@ -291,6 +298,8 @@ class Controller:
 
         self.logger.info(f'Attached device @ {format_address(self.interface, device_address)}')
 
+        self.device_poll_responses[device_address] = [poll_response]
+
     def _handle_device_lost(self, device):
         device_address = device.device_address
 
@@ -305,6 +314,9 @@ class Controller:
         del self.devices[device_address]
 
         self.logger.info(f'Detached device @ {format_address(self.interface, device_address)}')
+
+        if device_address in self.device_poll_responses:
+            del self.device_poll_responses[device_address]
 
     def _handle_poll_response(self, device, poll_response):
         if isinstance(poll_response, KeystrokePollResponse):
