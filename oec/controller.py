@@ -226,10 +226,10 @@ class Controller:
 
             poll_commands = [address_commands(device.device_address, Poll(device.get_poll_action())) for device in devices]
 
-            poll_responses = self.interface.execute(poll_commands, receive_timeout_is_error=False)
+            poll_responses = list(zip(devices, self.interface.execute(poll_commands, receive_timeout_is_error=False)))
 
-            for (device, poll_response) in list(zip(devices, poll_responses)):
-                # Update the device responses.
+            # Update the device response history.
+            for (device, poll_response) in poll_responses:
                 xxx = self.device_poll_responses.get(device.device_address, None)
 
                 if xxx is not None:
@@ -237,9 +237,19 @@ class Controller:
                 else:
                     self.device_poll_responses[device.device_address] = [poll_response]
 
-                if poll_response is None:
-                    continue
+            # Handle POLL responses.
+            handleable_poll_responses = [pair for pair in poll_responses if pair[1] is not None and not isinstance(pair[1], ReceiveTimeout)]
 
+            if handleable_poll_responses:
+                poll_ack_commands = [address_commands(device.device_address, PollAck()) for (device, _) in handleable_poll_responses]
+
+                self.interface.execute(poll_ack_commands)
+
+                for (device, poll_response) in handleable_poll_responses:
+                    self._handle_poll_response(device, poll_response)
+
+            # Handle lost devices.
+            for (device, poll_response) in poll_responses:
                 if isinstance(poll_response, ReceiveTimeout):
                     self.logger.info(f'POLL receive timeout for device @ {format_address(self.interface, device.device_address)}')
 
@@ -247,10 +257,8 @@ class Controller:
 
                     if len(xxx) == 3 and all(isinstance(poll_response, ReceiveTimeout) for poll_response in xxx):
                         self._handle_device_lost(device)
-                else:
-                    self._handle_poll_response(device, poll_response)
 
-            if all(poll_response is None or isinstance(poll_response, ReceiveTimeout) for poll_response in poll_responses):
+            if not handleable_poll_responses:
                 break
 
     def _poll_next_detatched_device(self):
