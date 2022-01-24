@@ -21,7 +21,7 @@ if os.name == 'posix':
 from .keymap_3278_2 import KEYMAP as KEYMAP_3278_2
 from .keymap_3483 import KEYMAP as KEYMAP_3483
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 logger = logging.getLogger('oec.main')
 
