@@ -451,6 +451,6 @@ def encode_character(character):
     """Map a character to a terminal display character."""
     return CHAR_MAP.get(character, 0x00)
 
-def encode_string(string, errors='replace'):
+def encode_string(string):
     """Map a string to terminal display characters."""
     return bytes(map(encode_character, string))
