@@ -384,4 +384,4 @@ def get_ebcdic_character_for_key(key):
     if not ascii_character:
         return None
 
-    return ascii_character.encode('ibm037')[0]
+    return ascii_character.encode('cp500')[0]

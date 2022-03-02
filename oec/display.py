@@ -447,7 +447,7 @@ _ASCII_CHAR_MAP = {
     '*': 0xbf
 }
 
-_EBCDIC_CHAR_MAP = {ascii_character.encode('ibm037')[0]: byte for ascii_character, byte in _ASCII_CHAR_MAP.items()}
+_EBCDIC_CHAR_MAP = {ascii_character.encode('cp500')[0]: byte for ascii_character, byte in _ASCII_CHAR_MAP.items()}
 
 ASCII_CHAR_MAP = [_ASCII_CHAR_MAP.get(character, 0x00) for character in map(chr, range(256))]
 
