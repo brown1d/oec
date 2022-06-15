@@ -9,6 +9,10 @@ from .keyboard import Key, Keymap
 # of the 3270 keyboard and may not be correct.
 
 KEYMAP_DEFAULT = {
+    # Segment A Assignments
+    # ESC
+    8: Key.ATTN,     
+
     # Function Keys
     7: Key.PF1,
     15: Key.PF2,
@@ -24,17 +28,11 @@ KEYMAP_DEFAULT = {
     94: Key.PF12,
 
     # Control Keys
-    5: Key.ATTN,
-    6: Key.CLEAR,
-    4: Key.CURSOR_SELECT,
-    12: None, # Pause
-    3: Key.EXTEND_SELECT,
-    11: Key.ERASE_EOF,
-    131: Key.PRINT,
-    10: None, # Play
-    1: Key.PRINT,
-    9: Key.CTRL,
+    # Don't try to refine Print Screen/Scroll Lock
+    # Pause
+    98: Key.CLEAR,
 
+    # Segment B
     # First Row
     14: Key.BACKTICK,
     22: Key.ONE,
@@ -104,6 +102,7 @@ KEYMAP_DEFAULT = {
     57: Key.RIGHT_ALT,
     88: Key.ENTER,
 
+    # Segment C
     # Center
     103: Key.INSERT,
     110: Key.HOME,
@@ -114,7 +113,6 @@ KEYMAP_DEFAULT = {
 
     99: Key.UP,
     97: Key.LEFT,
-    98: None, # Rule
     106: Key.RIGHT,
     96: Key.DOWN,
 
@@ -142,6 +140,10 @@ KEYMAP_DEFAULT = {
 KEYMAP_SHIFT = {
     **KEYMAP_DEFAULT,
 
+    # Segment A Assignments
+    # ESC
+    8: Key.SYS_RQ,
+
     # Function Keys
     7: Key.PF13,
     15: Key.PF14,
@@ -155,9 +157,6 @@ KEYMAP_SHIFT = {
     79: Key.PF22,
     86: Key.PF23,
     94: Key.PF24,
-
-    # Control Keys
-    10: None, # Copy
 
     # First Row
     14: Key.TILDE,
@@ -220,6 +219,14 @@ KEYMAP_SHIFT = {
     103: Key.DUP,
     110: Key.FIELD_MARK,
     111: Key.PA3,
+}
+
+KEYMAP_CTRL = {
+    # Segment A
+    # Control Keys
+    # Don't try to refine Print Screen/Scroll Lock
+    # Pause
+    #98: Key.BREAK,
 }
 
 KEYMAP_ALT = {
